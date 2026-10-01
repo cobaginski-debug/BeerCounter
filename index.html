@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Strichliste</title>
+  <meta name="description" content="Gemeinsame Strichliste für eure Gruppe – live auf allen Handys.">
+  <meta name="theme-color" content="#0f0d0a">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Strichliste">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-emoji" id="app-emoji" aria-hidden="true">🍺</span>
+        <div class="brand-text">
+          <h1 id="app-title">Strichliste</h1>
+          <p class="status" id="status"><span class="status-dot" aria-hidden="true"></span><span id="status-text">Verbinde …</span></p>
+        </div>
+      </div>
+      <div class="total" id="total-box" aria-live="polite" hidden>
+        <span class="total-num" id="total">0</span>
+        <span class="total-label" id="total-label">Biere gesamt</span>
+      </div>
+    </div>
+    <p class="banner banner-offline" id="offline-banner" hidden>
+      Offline – deine Striche werden übertragen, sobald du wieder online bist. App bis dahin bitte nicht schließen.
+    </p>
+  </header>
+
+  <p class="banner banner-install" id="install-banner" hidden>
+    <span>Tipp: In Safari auf <strong>Teilen</strong> <svg class="inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg> und dann <strong>„Zum Home-Bildschirm“</strong> tippen – dann startet die Strichliste wie eine App.</span>
+    <button type="button" class="banner-close" id="install-banner-close" aria-label="Hinweis schließen">×</button>
+  </p>
+
+  <main>
+    <section class="screen screen-loading" id="screen-loading">
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Verbinde mit der Strichliste …</p>
+      <p class="hint" id="loading-hint" hidden>
+        Das dauert ungewöhnlich lange. Prüfe deine Internetverbindung und die <code>databaseURL</code> in <code>config.js</code>.
+      </p>
+    </section>
+
+    <section class="screen screen-setup" id="screen-setup" hidden>
+      <div class="setup-card">
+        <h2 id="setup-title">Einrichtung fehlt</h2>
+        <p id="setup-text"></p>
+        <ul id="setup-list"></ul>
+        <p class="hint">Eine Schritt-für-Schritt-Anleitung findest du in der <code>README.md</code> im Repository.</p>
+        <button type="button" class="btn btn-secondary" id="setup-retry">Erneut versuchen</button>
+      </div>
+    </section>
+
+    <section class="screen screen-app" id="screen-app" hidden>
+      <ul class="list" id="list" aria-label="Mitglieder"></ul>
+
+      <div class="empty" id="empty" hidden>
+        <p class="empty-emoji" aria-hidden="true">🍻</p>
+        <h2>Noch niemand auf der Liste</h2>
+        <p>Füge die Mitglieder eurer Gruppe hinzu – danach kann jede und jeder bei sich zählen.</p>
+        <button type="button" class="btn btn-primary" id="empty-add">Erstes Mitglied hinzufügen</button>
+      </div>
+
+      <footer class="list-footer" id="list-footer" hidden>
+        <div class="footer-actions">
+          <button type="button" class="btn btn-secondary" id="share-btn">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0L8 7m4-4 4 4M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>
+            Stand teilen
+          </button>
+          <button type="button" class="btn btn-danger-outline" id="reset-btn">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/></svg>
+            Alle Zähler zurücksetzen
+          </button>
+        </div>
+        <p class="last-reset" id="last-reset"></p>
+        <button type="button" class="btn btn-ghost" id="install-btn" hidden>App auf dem Startbildschirm installieren</button>
+      </footer>
+    </section>
+  </main>
+
+  <nav class="bottom-bar" id="bottom-bar" hidden>
+    <button type="button" class="btn btn-secondary btn-undo" id="undo-btn" disabled>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      <span class="undo-text">
+        <span>Rückgängig</span>
+        <small id="undo-label">Noch nichts gezählt</small>
+      </span>
+    </button>
+    <button type="button" class="btn btn-primary" id="add-btn">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      Mitglied
+    </button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Mitglied hinzufügen -->
+  <dialog id="dlg-add" class="dlg-top" aria-labelledby="dlg-add-title">
+    <form class="dlg-body" id="add-form" novalidate>
+      <h2 id="dlg-add-title">Mitglied hinzufügen</h2>
+      <label class="field">
+        <span>Name</span>
+        <input type="text" id="add-name" maxlength="30" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="z. B. Max" required>
+      </label>
+      <label class="check">
+        <input type="checkbox" id="add-pin">
+        <span>
+          <strong>Mit 4-stelliger PIN schützen</strong>
+          <small>Dann kann nur zählen, wer die PIN kennt.</small>
+        </span>
+      </label>
+      <p class="form-error" id="add-error" role="alert"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-secondary" data-cancel>Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Hinzufügen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Texteingabe (z. B. Umbenennen) -->
+  <dialog id="dlg-prompt" class="dlg-top" aria-labelledby="prompt-title">
+    <form class="dlg-body" id="prompt-form" novalidate>
+      <h2 id="prompt-title"></h2>
+      <label class="field">
+        <span id="prompt-label">Name</span>
+        <input type="text" id="prompt-input" maxlength="30" autocomplete="off" autocapitalize="words" enterkeyhint="done">
+      </label>
+      <p class="form-error" id="prompt-error" role="alert"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-secondary" data-cancel>Abbrechen</button>
+        <button type="submit" class="btn btn-primary" id="prompt-submit">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- PIN-Tastatur -->
+  <dialog id="dlg-pin" aria-labelledby="pin-title">
+    <div class="dlg-body pin-body">
+      <h2 id="pin-title">PIN eingeben</h2>
+      <p class="dlg-text" id="pin-text"></p>
+      <div class="pin-dots" id="pin-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <p class="form-error" id="pin-error" role="alert"></p>
+      <div class="pin-pad" id="pin-pad">
+        <button type="button" data-key="1">1</button>
+        <button type="button" data-key="2">2</button>
+        <button type="button" data-key="3">3</button>
+        <button type="button" data-key="4">4</button>
+        <button type="button" data-key="5">5</button>
+        <button type="button" data-key="6">6</button>
+        <button type="button" data-key="7">7</button>
+        <button type="button" data-key="8">8</button>
+        <button type="button" data-key="9">9</button>
+        <button type="button" data-key="cancel" class="pin-aux">Abbrechen</button>
+        <button type="button" data-key="0">0</button>
+        <button type="button" data-key="back" class="pin-aux" aria-label="Löschen">⌫</button>
+      </div>
+      <p class="hint" id="pin-hint" hidden></p>
+    </div>
+  </dialog>
+
+  <!-- Optionen für ein Mitglied -->
+  <dialog id="dlg-member" aria-labelledby="member-title">
+    <div class="dlg-body">
+      <h2 id="member-title"></h2>
+      <p class="dlg-text" id="member-text"></p>
+      <div class="action-list" id="member-actions"></div>
+      <button type="button" class="btn btn-secondary" data-cancel>Schließen</button>
+    </div>
+  </dialog>
+
+  <!-- Bestätigung -->
+  <dialog id="dlg-confirm" aria-labelledby="confirm-title">
+    <div class="dlg-body">
+      <h2 id="confirm-title"></h2>
+      <p class="dlg-text" id="confirm-text"></p>
+      <button type="button" class="btn btn-secondary" id="confirm-extra" hidden></button>
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-secondary" data-cancel>Abbrechen</button>
+        <button type="button" class="btn btn-primary" id="confirm-ok">OK</button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript>
+    <p class="noscript">Die Strichliste benötigt JavaScript. Bitte aktiviere es in deinem Browser.</p>
+  </noscript>
+</body>
+</html>

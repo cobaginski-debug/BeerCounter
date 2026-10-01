@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "groups": {
+      "$groupId": {
+        "meta": {
+          ".read": "auth != null && $groupId.matches(/^[A-Za-z0-9_-]{12,64}$/)",
+          "resetAt": {
+            ".write": "auth != null",
+            ".validate": "$groupId.matches(/^[A-Za-z0-9_-]{12,64}$/) && newData.isNumber() && newData.val() === now"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "members": {
+          ".read": "auth != null && $groupId.matches(/^[A-Za-z0-9_-]{12,64}$/)",
+          "$memberId": {
+            ".write": "auth != null && (!data.exists() || (!newData.exists() && (!root.child('groups/' + $groupId + '/pins/' + $memberId).exists() || data.child('count').val() === 0 || root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === root.child('groups/' + $groupId + '/pins/' + $memberId).val())))",
+            ".validate": "$groupId.matches(/^[A-Za-z0-9_-]{12,64}$/) && $memberId.matches(/^[A-Za-z0-9_-]{1,40}$/) && newData.hasChildren(['name', 'count', 'createdAt', 'hasPin'])",
+            "name": {
+              ".write": "auth != null && (!root.child('groups/' + $groupId + '/pins/' + $memberId).exists() || root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === root.child('groups/' + $groupId + '/pins/' + $memberId).val())",
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+            },
+            "count": {
+              ".write": "auth != null && (newData.val() === 0 || !root.child('groups/' + $groupId + '/pins/' + $memberId).exists() || root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === root.child('groups/' + $groupId + '/pins/' + $memberId).val())",
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9999 && newData.val() % 1 === 0 && (data.exists() ? (newData.val() === 0 || newData.val() === data.val() + 1 || newData.val() === data.val() - 1) : newData.val() === 0)"
+            },
+            "createdAt": {
+              ".validate": "newData.isNumber() && (data.exists() ? newData.val() === data.val() : newData.val() === now)"
+            },
+            "hasPin": {
+              ".write": "auth != null && (newData.val() === true ? !root.child('groups/' + $groupId + '/pins/' + $memberId).exists() : root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === root.child('groups/' + $groupId + '/pins/' + $memberId).val())",
+              ".validate": "newData.isBoolean() && newData.val() === newData.parent().parent().parent().child('pins/' + $memberId).exists()"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "pins": {
+          "$memberId": {
+            ".write": "auth != null && (newData.exists() ? (!data.exists() || root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === data.val()) : (!newData.parent().parent().child('members/' + $memberId).exists() || (newData.parent().parent().child('members/' + $memberId + '/hasPin').val() === false && root.child('groups/' + $groupId + '/unlocks/' + $memberId + '/' + auth.uid).val() === data.val())))",
+            ".validate": "newData.isString() && newData.val().matches(/^[0-9a-f]{64}$/) && newData.parent().parent().child('members/' + $memberId + '/hasPin').val() === true"
+          }
+        },
+        "unlocks": {
+          "$memberId": {
+            ".write": "auth != null && !newData.exists() && !newData.parent().parent().child('pins/' + $memberId).exists()",
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid",
+              ".validate": "newData.isString() && newData.val() === newData.parent().parent().parent().child('pins/' + $memberId).val()"
+            }
+          }
+        }
+      }
+    }
+  }
+}
